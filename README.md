@@ -74,6 +74,11 @@ It swaps the XPS's AudShim audio for AppleALC, drops the XPS-only ACPI and keeps
 GPU-specific unchanged. Not yet tested on hardware. Details, BIOS settings and a bring-up
 checklist: [docs/PORT-X13YOGA.md](docs/PORT-X13YOGA.md).
 
+**OpenGL acceleration experiment** (applies to both machines): `install-macos.sh` already installs
+Apple's unreleased Tiger Lake OpenGL driver (`AppleIntelTGLGraphicsGLDriver.bundle`) alongside the
+Metal driver — inert so far (#21). The plan to activate it, with a ready-to-run read-only probe
+(`macos/gl-probe.sh` + `macos/cgl-probe.c`), is in [docs/OPENGL.md](docs/OPENGL.md).
+
 ---
 
 ## What works

@@ -81,7 +81,9 @@ patches target device `0x9A49` natively.
 1. **Boot to desktop.** Apple logo from the first frame (`gfxrst=1`, `Resolution=Max`).
    If the screen stays black after the picker, see the debug notes in [DEBUGGING](DEBUGGING.md).
 2. **GPU**: `kmutil showloaded | grep NootedGreen`, `ioreg -rc IntelAccelerator`. Desktop/Dock/Liquid
-   Glass should be GPU-composited. OpenGL is software-only on this stack (same as the XPS, #21).
+   Glass should be GPU-composited. OpenGL is software-only on this stack (same as the XPS, #21) —
+   the experiment to activate Apple's own TGL OpenGL driver is prepared in [OPENGL.md](OPENGL.md)
+   (`macos/gl-probe.sh` runs read-only diagnostics + the CGL baseline).
 3. **Trackpad/keyboard**: if the trackpad is dead or lags, the GPIO path failed — try adding
    `-vi2c-force-polling` to `boot-args` as a diagnostic (the install config uses it already).
 4. **Touchscreen**: multi-touch should just work through VoodooI2CHID; the pen is experimental
