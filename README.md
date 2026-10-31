@@ -66,6 +66,14 @@ entry. Details: [docs/INSTALL.md](docs/INSTALL.md#updating-an-existing-install).
 
 > ⚠️ **Experimental.** Expect occasional GPU hangs and kernel panics. Keep a second bootable disk (or the USB installer) around. Read [docs/STATUS.md](docs/STATUS.md) before you start.
 
+## Other machines: ThinkPad X13 Yoga Gen 2 (branch `x13-yoga-gen2`)
+
+The stack also has an initial port to the **Lenovo ThinkPad X13 Yoga Gen 2** (i5-1135G7 — *real*
+Tiger Lake, the GPU Apple's driver was written for, so no spoof and no hybrid-CPU fixes apply).
+It swaps the XPS's AudShim audio for AppleALC, drops the XPS-only ACPI and keeps everything
+GPU-specific unchanged. Not yet tested on hardware. Details, BIOS settings and a bring-up
+checklist: [docs/PORT-X13YOGA.md](docs/PORT-X13YOGA.md).
+
 ---
 
 ## What works
