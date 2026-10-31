@@ -28,4 +28,4 @@
   dynamically against those libraries.
 - **Apple software is not included.** The scripts patch your own copy of Apple's GPUDriversIntel 16.0.32 bundles at
   install time. Apple, macOS, Metal and related names are trademarks of Apple Inc.; this project is not affiliated
-  with or endorsed by Apple, Intel or Dell.
+  with or endorsed by Apple, Intel or Lenovo.

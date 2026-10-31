@@ -1,128 +1,80 @@
-# Iris Xe acceleration on macOS Tahoe — Dell XPS 13 Plus (9320)
+# Iris Xe acceleration on macOS Tahoe — Lenovo ThinkPad X13 Yoga Gen 2
 
-Hardware-accelerated graphics (**Metal, Core Animation, Liquid Glass**) for the **Intel Iris Xe of the i7-1360P (Raptor Lake-P, 8086:A7A0)** on **macOS Tahoe 26.7.1**, in an OpenCore hackintosh.
+Hardware-accelerated graphics (**Metal, Core Animation, Liquid Glass**) for the **Intel Iris Xe of the i5-1135G7 (Tiger Lake-LP, 8086:9A49)** on **macOS Tahoe 26.7.1**, in an OpenCore hackintosh.
 
-There is no Apple driver for Raptor Lake. This project runs **Apple's own driver for Tiger Lake Iris Xe** (GPUDriversIntel 16.0.32, written for Macs that never shipped) on the newer GPU. Both GPUs share the Xe-LP (Gen12) architecture. A modified **NootedGreen** Lilu plugin bridges the generation gap in the kernel, and a set of user-space patches bridges the gap between that 2020-era driver and Tahoe's Metal stack.
+This fork is derived from the upstream project, which ran Apple's unreleased Tiger Lake driver on a newer, *spoofed* GPU (Raptor Lake-P). The ThinkPad X13 Yoga Gen 2 is different: its i5-1135G7 **is** the GPU Apple's driver was written for — real Tiger Lake, `8086:9A49`, no spoof, no hybrid-CPU work. The hard part of the stack (the Metal driver patches, `libxedrv`, the shader compiler, the kernel patches) is GPU-specific and applies unchanged; what this fork changes is the laptop layer: ACPI, audio (AppleALC instead of the upstream SOF speaker stack), input and power management.
 
-> 🚧 **Work in progress — this repository is a living snapshot.** Development happens day by day on the author's own
-> XPS 13 Plus, and every fix is committed here after it is confirmed on real hardware. Expect frequent updates;
-> see [CHANGELOG.md](CHANGELOG.md) for what changed and what is still being tested, and the
-> [releases](../../releases) for the stable points.
+> ⚠️ **Status: prepared, not yet booted on hardware.** This fork has not been tested on a real ThinkPad yet. Everything below is the bring-up plan and expected behaviour; treat it as unverified until someone reports a successful boot. See [docs/STATUS.md](docs/STATUS.md).
 
-## New: full CPU turbo and lower idle power (`-ngreenpm`, 26 Oct)
+## Hardware
 
-macOS power management (XCPM) predates Intel's hybrid CPUs, and on 12th/13th-gen laptops it holds the CPU back:
+| Area | Device |
+|---|---|
+| Machine | Lenovo ThinkPad X13 Yoga Gen 2 (20W8), convertible |
+| CPU | Intel Core i5-1135G7 (Tiger Lake-LP, 4C/8T, no E-cores) |
+| GPU | Intel Iris Xe, `8086:9A49` (native, no spoof) |
+| Panel | 1920×1200 IPS, touch, convertible |
+| Touchpad | ELAN0674 (`04F3:3193`) on I2C0, GPIO pin 0x15 |
+| Touchscreen + pen | Wacom WACF2208 (`056A:5286`) on I2C1, GPIO pin 0x0A |
+| Keyboard / TrackPoint | PS/2 (AT keyboard + Elan TrackPoint) |
+| Audio | Realtek ALC285 on legacy HDA (`HDAS`) |
+| Wi-Fi / BT | Intel AX201 |
+| NVMe | Samsung PM981a |
+| Camera | Chicony (Intel IPU6) — no macOS driver |
+| Fingerprint | Synaptics `06cb:00f9` (USB) — no macOS driver |
+| EC | `\_SB.PC00.LPCB.EC`, already named `EC` |
 
-- **P-cores stuck at ~3.8 GHz.** XCPM writes the HWP turbo limit in 100 MHz units, but hybrid P-cores count HWP
-  performance in ~78.7 MHz units, so "5.0 GHz" becomes ~3.9 GHz. On top of that, its default EPP (128) clips
-  one-core turbo on Alder/Raptor Lake mobile parts (an Intel-documented behaviour), and energy-efficient turbo holds
-  the top bins.
-- **Deep idle states off.** XCPM's idle table for the spoofed CPU has C8/C10 disabled and uses C3, which these CPUs
-  don't have, so cores never sleep deeper than C6.
+## Expected support (untested)
 
-The NootedGreen **XE-PM** profile fixes all of this, 20 s after boot. It is **on in this repo's `config.plist`**
-as `ngreenpm=22`: the profile plus a sustained power limit (PL1) of 22 W instead of the 17.5 W the BIOS leaves without
-Dell's Windows thermal software (`-ngreenpm` alone keeps the BIOS PL1). Measured on the XPS 13 Plus (i7-1360P):
-
-| | Before | With `-ngreenpm` |
-|---|---|---|
-| Geekbench 7 single-core | 1269 | **1682–1697 (+33 %)** |
-| Geekbench 7 multi-core | 5859 | **6772 (+16 %)** with `ngreenpm=22` (6148 with the 17.5 W PL1) |
-| 45 s all-core load | 7079 (17.5 W, 75 °C) | **8423–8706 (+19–23 %, 22 W, ~85 °C)**; 25–28 W reach 93–94 °C and run slower |
-| One-thread clock | 3.3–3.8 GHz | 4.3–4.85 GHz |
-| Idle package power | ~4.6 W | ~3.3 W |
-
-Confirmed on a second machine: Dell Latitude 7430, i5-1245U (2P+8E), Geekbench 6 single-core 1370 → **1832 (+34 %)**,
-multi-core 4142 → 4550, idle package 6.2 → ~5.4 W ([#9](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe/issues/9)).
-Other Alder Lake / Raptor Lake hybrid machines on this stack should see the same turbo fix; add `-ngreenpm` to try it
-(PL1 is only changed with `ngreenpm=W`; pick it for your cooling)
-(**keep a backup EFI**; it patches XCPM and only applies on macOS 26.7.1 25G241, where the code was checked byte for
-byte). EPP: `ngreenpmepp=N` at boot (default 0, max performance) or `sudo sysctl -w debug.xepm.epp=64` live.
-Status: `sysctl debug.xepm`. The C8/C10 part can be switched off live with `sudo sysctl -w debug.xepm.cst=0` (`=1`
-turns it back on) or at boot with `ngreenpmcst=0`, while a possible coil whine at idle is being investigated.
-Details in [CHANGELOG.md](CHANGELOG.md).
+| Area | Status |
+|---|---|
+| Metal desktop, Liquid Glass, WindowServer | expected ✅ (same GPU as the upstream stack) |
+| CPU | ✅ XCPM works as-is on Tiger Lake (no hybrid-CPU fixes needed) |
+| Touchpad / touchscreen / keyboard | expected ✅ via VoodooI2C (GPIO interrupts under the XOSI Windows spoof) |
+| Audio | ⚠️ AppleALC with an `alcid=` layout to be determined (candidates: 17, 99, 11, 21, 29, 66, 14, 15) |
+| Wi-Fi, Bluetooth | expected ✅ (AirportItlwm + IntelBluetoothFirmware, unchanged) |
+| Battery | expected ✅ (real EC, SMCBatteryManager) |
+| Vulkan (MoltenVK) | expected ✅ (same accelerated Metal driver) |
+| OpenGL | ⚠️ software renderer only (same as upstream; experiment prepared in [docs/OPENGL.md](docs/OPENGL.md)) |
+| System sleep | ❌ experimental only (Modern Standby firmware; S3 selectable in BIOS for testing) |
+| Camera, fingerprint | ❌ not working (same as upstream) |
 
 ## Already installed? Update
 
 If the stack already runs on your machine, update it like this (latest changes in [CHANGELOG.md](CHANGELOG.md)):
 
 1. **Back up the EFI you boot from** (a copy of the `EFI` folder or a second bootable USB EFI).
-2. In your clone, on an APFS disk:
+2. In your clone:
    ```sh
    git pull
    zsh install.sh          # rebuilds and reinstalls NootedGreen, the Metal driver, libxedrv and the shader compiler
    ```
 3. Copy the new `build/NootedGreen.kext` over `EFI/OC/Kexts/NootedGreen.kext` on the EFI you boot from.
-4. Reboot and check: `kmutil showloaded | grep NootedGreen`. Since 25 Oct, `ioreg -rc IntelAccelerator -d1 | grep rowchk`
-   also shows `xe-rowchk-post` (the GPU fix for the dash artifacts in Preview/Photos, #9).
+4. Reboot and check: `kmutil showloaded | grep NootedGreen`.
 
 Don't run `make-efi.sh` again to update: it generates **new** serial numbers (SMBIOS), which signs you out of
 iCloud/iMessage. Keep your EFI and only replace the kext.
 
-If it doesn't boot, use the backup EFI. Single fixes can be turned off with the boot-arg named in their CHANGELOG
-entry. Details: [docs/INSTALL.md](docs/INSTALL.md#updating-an-existing-install).
+## Other hardware
 
-> 🇧🇷 Leia em português: [README.pt-BR.md](README.pt-BR.md)
-
-> ⚠️ **Experimental.** Expect occasional GPU hangs and kernel panics. Keep a second bootable disk (or the USB installer) around. Read [docs/STATUS.md](docs/STATUS.md) before you start.
-
-## Other machines: ThinkPad X13 Yoga Gen 2 (branch `x13-yoga-gen2`)
-
-The stack also has an initial port to the **Lenovo ThinkPad X13 Yoga Gen 2** (i5-1135G7 — *real*
-Tiger Lake, the GPU Apple's driver was written for, so no spoof and no hybrid-CPU fixes apply).
-It swaps the XPS's AudShim audio for AppleALC, drops the XPS-only ACPI and keeps everything
-GPU-specific unchanged. Not yet tested on hardware. Details, BIOS settings and a bring-up
-checklist: [docs/PORT-X13YOGA.md](docs/PORT-X13YOGA.md).
-
-**OpenGL acceleration experiment** (applies to both machines): `install-macos.sh` already installs
-Apple's unreleased Tiger Lake OpenGL driver (`AppleIntelTGLGraphicsGLDriver.bundle`) alongside the
-Metal driver — inert so far (#21). The plan to activate it, with a ready-to-run read-only probe
-(`macos/gl-probe.sh` + `macos/cgl-probe.c`), is in [docs/OPENGL.md](docs/OPENGL.md).
-
----
-
-## What works
-
-| Area | Status |
-|---|---|
-| Desktop, Dock, windows, Liquid Glass blur | ✅ GPU-accelerated through Metal |
-| Native panel resolution (3840×2400) and HiDPI scaling (1280–1920 pt wide) | ✅ switch with `tools/xe-res`, not System Settings (a brief glitch during the switch is cosmetic) |
-| GPU clock | ✅ ~1300 MHz under load (requests RP0 1500 MHz; the CPU package power limit PL4/IccMax caps it at ~1300), idles in RC6 |
-| CPU | ✅ **full turbo (up to ~4.85 GHz on one P-core) with `-ngreenpm`** (XE-PM, see above) · ✅ **all 16 threads (4 P-cores with HT + 8 E-cores)** — the E-cores used to hang the boot; fixed with one byte in `Cpuid1Data` (see [STATUS](docs/STATUS.md)). CpuTopologyRebuild 2.0.2 (default mode) groups them as 4 P-cores with 4 threads each, so heavy work lands on P-cores; System Information shows 12 cores |
-| HEIC / YUV images (wallpapers, photos) | ✅ |
-| App icons, Finder icons, image thumbnails | ✅ (the 10-bit extended-range layer format `w30r`/`BGR10_XR` is Apple-silicon-only: real Intel Macs don't render it either) |
-| Hardware video decode | ✅ **H.264 on the GPU** (bit-exact vs. software) for apps that use VideoToolbox: QuickTime, Photos, video editors, conversions. Needs `-ngreengva` and the patched VA plugin (`macos/vadriver/build-vadriver.sh`, installed by hand for now) · ✅ **HEVC** too (NootedGreen XE-GVAHEVC) · ⚠️ Safari decodes on the CPU: its WebKit GPU process may not load drivers from `/Library/GPUBundles` · ⚠️ with `-ngreengva` FairPlay content (Apple Music, probably Apple TV+) does not play: the VA plugin takes the hardware key-exchange path and fails with "ME not loaded" ([#11](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe/issues/11)); remove the boot-arg if you need it |
-| YouTube | ✅ Chrome with GPU compositing, up to 4K (VP9/AV1 decoded on the CPU) · ✅ Safari up to 1080p H.264 (needs an audio output: the internal speakers, Bluetooth, or the BlackHole virtual device) |
-| Screen recording | ✅ |
-| OpenGL | ⚠️ **software renderer only**: macOS Tahoe ships OpenGL drivers for Intel Ice Lake and Kaby Lake but none for Tiger Lake, so there is no hardware OpenGL. Apps that accept the software renderer run (slowly); apps that ask for an accelerated pixel format fail, e.g. Minecraft/GLFW "Failed to find a suitable pixel format" ([#21](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe/issues/21)). Metal apps are accelerated |
-| Vulkan | ✅ **Vulkan 1.4 through MoltenVK** on the accelerated Metal driver (Vulkan SDK from LunarG; `vulkaninfo` sees the Iris Xe, `vkcube` renders on the GPU at the 60 Hz vsync with ~1 s of CPU per 11.6 s run). No geometry shaders or shader float64 (Metal has neither). Setup in [INSTALL](docs/INSTALL.md#vulkan-moltenvk-optional) |
-| Touchscreen | ✅ up to 10 fingers via VoodooI2C; `tools/xe-toque` adds one-finger scroll, hold-for-right-click, edge swipes, pen, magnifier and a touch mode, hides the pointer while you touch (the trackpad brings it back), lasso selection in Finder, pinch-to-Quick-Look, four-finger window move/resize and a five-finger tile mode ([INSTALL](docs/INSTALL.md#touchscreen-extras-xe-toque)) |
-| Trackpad, keyboard | ✅ trackpad and touchscreen on GPIO/APIC interrupts (no polling freezes) |
-| Brightness | ✅ `tools/xe-brilho` (the macOS slider now covers the full panel range with `ngreenblmax=17777`) · ⚠️ the sun keys depend on a Dell firmware state that changes from boot to boot; F6/F7 always work through `xe-brilho daemon` |
-| Shutdown / restart | ✅ fast (XE-IDLEBOUND; used to stall ~3 min and panic) |
-| Boot screen | ✅ sharp Apple logo from the first frame, no garbage flash (OpenCore `Resolution=Max` + `gfxrst=1` + XE-BOOTHOLD) |
-| Internal speakers | ✅ our own `AudShim` kext runs Intel's SOF firmware on the audio DSP, SoundWire and both RT1316 amplifiers; `XeSpeakers` makes them a normal macOS output (volume, mute). Capped at −3 dB (AudShim 0.9.1), no speaker protection · AudShim 0.9.2 powers the DSP down after 30 s of silence (`audshimidleoffms=N`, 0 = never); the first sound after that takes ~1–2 s · ✅ internal microphones (RT714) as **"Microfone interno"** |
-| Wi-Fi, Bluetooth | ✅ native Wi-Fi menu via AirportItlwm-Tahoe (no HeliPort) · ❌ AirDrop/AWDL · ✅ Bluetooth (IntelBluetoothFirmware) |
-| CPU temperatures | ✅ package, every P-core and E-core, plus package/CPU/GPU watts, in the `tools/xe-temp` menu-bar app (reads NootedGreen's `debug.xepm.sensors`, no root; install in [INSTALL](docs/INSTALL.md#cpu-temperatures-xe-temp)) |
-| Touchpad haptics | ✅ click-vibration strength with `tools/xe-haptic` / the `xe-hapticbar` menu-bar slider · ❌ no on-demand pulse (Force Touch feedback) |
-| Fingerprint reader | ✅ for `sudo` (Goodix 27C6:63BC via libfprint, PAM module in `sudo_local`; `tools/fingerprint`) · ❌ login, screen unlock and Touch ID prompts (no Secure Enclave) |
-| Power button | ✅ a short press locks the screen (`tools/xe-pblock`) |
-| Sleep | ❌ no system sleep in the default install (Modern Standby only firmware; experimental S0 deep idle enters and wakes by RTC alarm, but lid/power button do not wake it and the panel stays black on wake, so it is paused and not shipped, see [STATUS](docs/STATUS.md)); ✅ display sleep (backlight off; with `-ngreenfbdpms` the panel does not come back), and lid close turns the display off (`tools/sleep`) |
-
-Everything else about the laptop (NVMe, battery, USB) is a regular OpenCore setup. The camera (OV01A10 behind Intel's
-IPU6) does **not** work on macOS; the fingerprint reader works for `sudo` only. **Internal speakers** work since
-2026-10-22 without any Apple audio driver: `AudShim` boots the Intel cAVS 2.5 audio DSP with Intel's SOF firmware
-(taken from the official sof-bin release at install time, not shipped here), starts SoundWire and the RT1316
-amplifiers, and the `XeSpeakers` AudioServerPlugIn publishes the output and microphone devices ([docs/INSTALL.md](docs/INSTALL.md#internal-speakers-and-microphones)).
+This repository targets only the ThinkPad X13 Yoga Gen 2. The user-space part of the stack is GPU-specific and would
+work on any Tiger Lake (or newer, spoofed) laptop, but you would need your own EFI (ACPI, USB map, input devices).
+The full manual procedure is in [docs/INSTALL.md](docs/INSTALL.md).
 
 ## How it works (one paragraph)
 
-The EFI presents the GPU as Tiger Lake (`device-id 9A49`). Apple's TGL kexts load from `/Library/Extensions`, and **NootedGreen** patches them in memory: display engine 13 quirks, the GuC-less host scheduler, broken resolve paths, IOSurface layout changes in Tahoe, GPU frequency, and more ([docs/KERNEL-PATCHES.md](docs/KERNEL-PATCHES.md)). In user space, the TGL **Metal driver** is binary-patched and gets an adapter library (`libxedrv`) that converts Tahoe's private Metal structures to the old layout and works around hardware limits. The TGL **shader compiler** (IGC gen12lp, LLVM 3902) runs inside Tahoe's compiler service (LLVM 32023) through an API adapter and an LLVM bridge ([docs/METAL.md](docs/METAL.md)).
+The EFI presents the GPU as Tiger Lake (`device-id 9A49`); on this machine that is its real identity. Apple's TGL
+kexts load from `/Library/Extensions`, and **NootedGreen** patches them in memory: display engine 13 quirks, the
+GuC-less host scheduler, broken resolve paths, IOSurface layout changes in Tahoe, GPU frequency, and more
+([docs/KERNEL-PATCHES.md](docs/KERNEL-PATCHES.md)). In user space, the TGL **Metal driver** is binary-patched and gets
+an adapter library (`libxedrv`) that converts Tahoe's private Metal structures to the old layout and works around
+hardware limits. The TGL **shader compiler** (IGC gen12lp, LLVM 3902) runs inside Tahoe's compiler service (LLVM 32023)
+through an API adapter and an LLVM bridge ([docs/METAL.md](docs/METAL.md)).
 
 ## Repository layout
 
 ```
-EFI/                     OpenCore EFI for the XPS 13 Plus 9320 (serials removed — generate your own)
+EFI/                     OpenCore EFI for the X13 Yoga Gen 2 (serials removed — generate your own)
   OC/config.plist        accelerated config
   OC/config-install.plist  safe config for installing macOS (NootedGreen off, verbose)
 src/NootedGreen/         the modified NootedGreen source (Lilu plugin)
@@ -133,29 +85,38 @@ patches/                 diff of this fork against upstream NootedGreen 95f8189
 macos/                   user-space stack: Metal driver patcher, libxedrv, shader compiler, VA (video) plugin patcher, installer
 tools/                   xe-res (resolution/DPI), xe-brilho (brightness), xe-perfil (color profile), xe-toque (touchscreen gestures),
                          XeShim + xectl (register access), diagnostics/ (the test programs used to find bugs),
-                         AudShim + audctl + XeSpeakers + audio/ (internal speakers), sleep/ (pmset + lid agent),
-                         xe-haptic + xe-hapticbar (touchpad vibration), fingerprint/ (fingerprint for sudo: libfprint patch,
-                         xe-fp, PAM module), xe-pblock/ (power button locks the screen), xe-temp/ (menu-bar CPU temperature)
+                         audio/ (AppleALC is used for this machine; AudShim/XeSpeakers are upstream-only),
+                         sleep/ (pmset + lid agent), xe-haptic + xe-hapticbar (touchpad vibration),
+                         fingerprint/ (unsupported on this machine), xe-pblock/ (power button locks the screen),
+                         xe-temp/ (menu-bar CPU temperature)
 docs/                    install guide, patch catalogs, status, debugging notes
 ```
 
 Documentation: [INSTALL](docs/INSTALL.md) · [STATUS](docs/STATUS.md) · [KERNEL-PATCHES](docs/KERNEL-PATCHES.md) ·
 [METAL](docs/METAL.md) · [DEBUGGING](docs/DEBUGGING.md) · [HISTORY](docs/HISTORY.md) (how it was done, phase by phase) ·
-[EXPERIMENTS](docs/EXPERIMENTS.md) (what failed and why) · [CATALOG](docs/CATALOG.md) (full patch and tool reference)
+[EXPERIMENTS](docs/EXPERIMENTS.md) (what failed and why) · [CATALOG](docs/CATALOG.md) (full patch and tool reference) ·
+[OPENGL](docs/OPENGL.md) (OpenGL activation experiment).
 
-## Quick start (Dell XPS 13 Plus 9320)
+## Quick start (ThinkPad X13 Yoga Gen 2)
 
-**1. Make your EFI** (on any Mac, with git):
+**1. Make your EFI** (on any Mac or Linux, with git):
 
 ```sh
-git clone https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe.git && cd Hackintosh-XPS13Plus-IrisXe-Tahoe
+git clone https://github.com/mschiller890/Hackintosh-X13YogaG2-Iris.git && cd Hackintosh-X13YogaG2-Iris
 zsh make-efi.sh        # -> dist/EFI with YOUR OWN serial numbers (never share them)
 ```
 
-**2. Install macOS Tahoe 26.7.1 (25G241)** booting with `EFI/OC/config-install.plist` renamed to `config.plist`
-(acceleration off). BIOS: usual hackintosh settings (storage in AHCI/NVMe mode, not RAID/VMD; Secure Boot off). The E-cores can stay enabled.
+On Linux, download the OpenCore release pinned in `make-efi.sh`, run `macserial.linux -m MacBookPro16,2 -g -n 1`,
+and fill `SystemSerialNumber` / `MLB` / `SystemUUID` / `ROM` in both plists with a plist editor (keep them empty in git).
 
-**3. On the new macOS**, with the accelerated `config.plist` back in place:
+**2. BIOS** (ThinkPad Setup): Secure Boot off, UEFI-only boot, **Sleep State = "Linux" (S3)**, VT-d left on,
+Hyper-Threading and SpeedStep on, CFG Lock left as-is (`AppleXcpmCfgLock` covers it), "OS Optimization" = Other OS if present.
+
+**3. Install macOS Tahoe 26.7.1 (25G241)** booting with `EFI/OC/config-install.plist` renamed to `config.plist`
+(acceleration off, verbose, I2C polling). Install to the second disk/partition for dual-boot with Linux. Keep the USB
+installer bootable as rollback.
+
+**4. On the new macOS**, with the accelerated `config.plist` back in place:
 
 ```sh
 xcode-select --install          # Command Line Tools, once
@@ -163,27 +124,26 @@ zsh install.sh                  # checks, downloads Apple's driver bundles via N
 ```
 
 Copy the freshly built `build/NootedGreen.kext` to `EFI/OC/Kexts/`, approve the extension if asked, reboot.
+
 `zsh install.sh --check` only runs the checks; `zsh install.sh --uninstall` removes everything.
+
+**5. Audio**: add `alcid=NN` to the boot-args and reboot, trying the candidates in order
+(17, 99, 11, 21, 29, 66, 14, 15). Speakers + headphone + internal mic are the pass criteria.
 
 **Updating:** see [Already installed? Update](#already-installed-update).
 
-Other hardware (other Raptor Lake / Alder Lake laptops): the user-space part is the same, but you need your own
-EFI (ACPI, USB map, input devices). The full manual procedure is in [docs/INSTALL.md](docs/INSTALL.md).
-NootedGreen describes every non-Tiger-Lake GPU as 96 EU (12 subslices × 8 EU, 8 L3 banks) unless told otherwise.
-**80 EU parts** (e.g. i5-1334U, i5-1340P, i5-12500H): add **`ngreen-eu=80 ngreen-l3=6`** to the boot-args. This removes
-the rendering artifacts (confirmed on an i5-1340P and an i5-1334U, [#3](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe/issues/3), on an i5-1240P / 46A6, [#16](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe/issues/16), and on a native Tiger Lake i5-1135G7 with 80 EU); these chips have 6 L3 banks
-(fuse register `0x9118`), not 8. Check: `ioreg -rc IntelAccelerator -d1 | grep xe-topo` shows 20486.
-
 ## Credits
 
+- **Upstream project** by JulioNectar ([Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe)):
+  the base of the GPU stack, the Metal driver patches, `libxedrv`, the shader compiler and the kernel patches.
 - **NootedGreen** by StezzaPilot ([sgiammori/NootedGreen](https://github.com/sgiammori/NootedGreen)): the base of the kernel plugin and the source of the 16.0.32 driver bundles. Licensed under the *Thou Shalt Not Profit License 1.0*, which also covers the fork in `src/`.
-- **WhateverXe** and **OpenCore Legacy Patcher fork** by b00t0x, and jkbuha's WhateverXe work: reference for Gen12 on macOS (including the Tahoe VA-plugin payload-header fix).
-- **BlackHole** by Existential Audio (virtual audio output, GPL-3.0), built by `tools/build-blackhole.sh`; also the reference for the AudioServerPlugIn property set.
-- **Sound Open Firmware** (Intel SOF firmware and topologies, sof-bin) and the Linux `sound/soc/sof` + SoundWire drivers: the reference for every AudShim step. The firmware is downloaded by you, not shipped.
+- **WhateverXe** and **OpenCore Legacy Patcher fork** by b00t0x, and jkbuha's WhateverXe work: reference for Gen12 on macOS.
+- **BlackHole** by Existential Audio (virtual audio output, GPL-3.0), built by `tools/build-blackhole.sh`.
+- **Sound Open Firmware** (Intel SOF firmware and topologies, sof-bin) and the Linux `sound/soc/sof` + SoundWire drivers: the reference for the upstream audio stack (not used on this machine — AppleALC is).
 - **laobamac/itlwm** (AirportItlwm-Tahoe, GPL-2.0), shipped in `EFI/OC/Kexts`.
 - **IntelIGPU-Tahoe**: reference for running the TGL Metal driver on Tahoe.
 - **acidanthera** (OpenCore, Lilu, WhateverGreen, VirtualSMC, MacKernelSDK), **OpenIntelWireless** (itlwm, IntelBluetoothFirmware), **VoodooI2C**, **USBToolBox**.
-- Developed on one Dell XPS 13 Plus by its owner, pair-programming with Claude (Anthropic).
+- Fork for the ThinkPad X13 Yoga Gen 2 by mschiller890.
 
 ## License
 

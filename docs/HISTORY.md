@@ -1,5 +1,13 @@
 # Project history
 
+> **Provenance.** This document is inherited from the upstream project (developed on its author's own machine, a
+> spoofed-TGL Raptor Lake laptop) and records work on the shared GPU stack — Apple's 16.0.32 Tiger Lake driver plus
+> NootedGreen. Every patch and experiment it describes runs unchanged on this ThinkPad's native `8086:9A49`; machine
+> names and dates in the text refer to the upstream author's hardware unless noted. Upstream repository:
+> [JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe).
+
+
+
 How the Iris Xe of a Dell XPS 13 Plus 9320 (i7-1360P, Raptor Lake-P, `8086:A7A0`) went from a 1024×768 firmware
 framebuffer to a Metal-accelerated macOS Tahoe 26.7.1 desktop, running Apple's Tiger Lake driver (GPUDriversIntel
 16.0.32) through a modified NootedGreen plus user-space patches.

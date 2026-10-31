@@ -1,5 +1,13 @@
 # Catalog
 
+> **Provenance.** This document is inherited from the upstream project (developed on its author's own machine, a
+> spoofed-TGL Raptor Lake laptop) and records work on the shared GPU stack — Apple's 16.0.32 Tiger Lake driver plus
+> NootedGreen. Every patch and experiment it describes runs unchanged on this ThinkPad's native `8086:9A49`; machine
+> names and dates in the text refer to the upstream author's hardware unless noted. Upstream repository:
+> [JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe).
+
+
+
 Complete reference of what this project changed, taken from the source code and the build artefacts. For the story
 behind each item see [HISTORY.md](HISTORY.md); abandoned approaches are collected in [EXPERIMENTS.md](EXPERIMENTS.md).
 

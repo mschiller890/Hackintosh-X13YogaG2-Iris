@@ -1,5 +1,13 @@
 # Experiments that failed, were abandoned or were reverted
 
+> **Provenance.** This document is inherited from the upstream project (developed on its author's own machine, a
+> spoofed-TGL Raptor Lake laptop) and records work on the shared GPU stack — Apple's 16.0.32 Tiger Lake driver plus
+> NootedGreen. Every patch and experiment it describes runs unchanged on this ThinkPad's native `8086:9A49`; machine
+> names and dates in the text refer to the upstream author's hardware unless noted. Upstream repository:
+> [JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe).
+
+
+
 Everything that was tried and did not survive into the final stack, plus the tests whose value was a negative result.
 The story around each item is in [HISTORY.md](HISTORY.md) (phase numbers below refer to it); what survived is in
 [KERNEL-PATCHES.md](KERNEL-PATCHES.md), [METAL.md](METAL.md) and [CATALOG.md](CATALOG.md).

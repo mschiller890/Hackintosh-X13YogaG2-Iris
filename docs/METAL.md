@@ -1,5 +1,13 @@
 # User-space stack (Metal driver, libxedrv, shader compiler)
 
+> **Provenance.** This document is inherited from the upstream project (developed on its author's own machine, a
+> spoofed-TGL Raptor Lake laptop) and records work on the shared GPU stack — Apple's 16.0.32 Tiger Lake driver plus
+> NootedGreen. Every patch and experiment it describes runs unchanged on this ThinkPad's native `8086:9A49`; machine
+> names and dates in the text refer to the upstream author's hardware unless noted. Upstream repository:
+> [JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe](https://github.com/JulioNectar/Hackintosh-XPS13Plus-IrisXe-Tahoe).
+
+
+
 Everything here is built by `macos/build-all.sh` from Apple's 16.0.32 bundles plus the sources in `macos/src`, and
 installed by `macos/install-macos.sh`.
 

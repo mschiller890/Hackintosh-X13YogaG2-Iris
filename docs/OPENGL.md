@@ -99,7 +99,7 @@ text from P1 — it names the failing check.
 
 ## Notes
 
-- Runs on **either machine** (XPS 13 Plus and the X13 Yoga Gen 2 port) — same GPU, same driver
-  package; the XPS is the reference machine for every other experiment.
+- Runs on **this machine** (ThinkPad X13 Yoga Gen 2, native Tiger Lake `8086:9A49`) — same GPU and the same driver
+  package as the upstream reference machine, so this experiment carries over unchanged.
 - Keep `cgl-probe` exit codes as the regression metric across attempts (0/1/2).
 - Do not install GL patches system-wide before `cgl-probe` passes them on a copy.
