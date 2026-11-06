@@ -1,7 +1,7 @@
 #!/bin/zsh
-# Builds a ready-to-use OpenCore EFI for the Dell XPS 13 Plus 9320 (i7-1360P) with YOUR OWN serial numbers.
+# Builds a ready-to-use OpenCore EFI for the Lenovo ThinkPad X13 Yoga Gen 2 (i5-1135G7) with YOUR OWN serial numbers.
 #
-#   zsh make-efi.sh                 -> dist/EFI and dist/EFI-XPS13Plus-9320.zip
+#   zsh make-efi.sh                 -> dist/EFI and dist/EFI-X13YogaG2.zip
 #
 # Every machine needs unique SMBIOS data (serial, MLB, UUID, ROM): sharing one set between machines breaks iCloud /
 # iMessage and can get Apple IDs flagged. This script downloads Apple-compatible serial tooling (macserial, from the
@@ -35,8 +35,8 @@ for c in $DIST/EFI/OC/config.plist $DIST/EFI/OC/config-install.plist; do
   plutil -replace PlatformInfo.Generic.ROM -data $ROM $c
   plutil -lint $c >/dev/null
 done
-rm -f $DIST/EFI-XPS13Plus-9320.zip
-(cd $DIST && ditto -c -k --keepParent EFI EFI-XPS13Plus-9320.zip)
+rm -f $DIST/EFI-X13YogaG2.zip
+(cd $DIST && ditto -c -k --keepParent EFI EFI-X13YogaG2.zip)
 cat <<EOF
 
 EFI pronta em: $DIST/EFI   (zip: $DIST/EFI-XPS13Plus-9320.zip)

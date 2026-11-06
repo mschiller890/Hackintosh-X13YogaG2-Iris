@@ -34,7 +34,8 @@ Change one setting at a time and keep a way to boot back.
    (SystemSerialNumber, MLB, SystemUUID, ROM) in **both** `config.plist` and `config-install.plist`.
    On Linux: download the OpenCore release pinned in `make-efi.sh`, run `macserial.linux -m MacBookPro16,2 -g -n 1`,
    and fill the fields with any plist editor (keep them empty in git).
-3. `HfsPlus.efi` is not shipped (Apple binary): add it from acidanthera/OcBinaryData if you boot HFS+ installer media.
+3. `HfsPlus.efi` is bundled in `EFI/OC/Drivers` (from acidanthera/OcBinaryData, the EFI driver used for HFS+ installer
+   media and gibMacOS/OC recovery boots) and enabled in both configs. Update it only if OpenCore asks for a newer one.
 4. USB ports are mapped generically (`UTBDefault.kext`); build a real map later with USBToolBox's Windows tool or macOS USBMap,
    then drop `UTBDefault.kext`.
 5. Input devices run on GPIO/APIC interrupts through VoodooI2C + `SSDT-XOSI` (the firmware's own `_CRS` returns I2C +
@@ -304,11 +305,6 @@ open ~/VulkanSDK/<version>/Applications/vkcube.app
 Apps and games that bundle MoltenVK need nothing else. There is no geometry shader and no 64-bit float in shaders
 (Metal has neither). OpenGL stays software-only (see the README); OpenGL over Vulkan (Mesa Zink) would need a Mesa
 build and a window bridge and has not been done.
-
-## OpenGL","oldString">
-## Touchscreen extras (xe-toque)
-
-See the Touchscreen extras section above.
 
 ## OpenGL
 

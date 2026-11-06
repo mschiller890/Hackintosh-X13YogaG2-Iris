@@ -405,7 +405,7 @@
 			<key>ForceBooterSignature</key>
 			<false/>
 			<key>ForceExitBootServices</key>
-			<false/>
+			<true/>
 			<key>ProtectMemoryRegions</key>
 			<false/>
 			<key>ProtectSecureBoot</key>
@@ -421,7 +421,7 @@
 			<key>ResizeAppleGpuBars</key>
 			<integer>-1</integer>
 			<key>SetupVirtualMap</key>
-			<false/>
+			<true/>
 			<key>SignalAppleOS</key>
 			<false/>
 			<key>SyncRuntimePermissions</key>
@@ -502,6 +502,26 @@
 			<dict>
 				<key>Arch</key>
 				<string>Any</string>
+				<key>BundlePath</key>
+				<string>DebugEnhancer.kext</string>
+				<key>Comment</key>
+				<string>raises Lilu debug verbosity on RELEASE builds (EXITBS diagnosis)</string>
+				<key>Enabled</key>
+				<true/>
+				<key>ExecutablePath</key>
+				<string>Contents/MacOS/DebugEnhancer</string>
+				<key>MaxKernel</key>
+				<string></string>
+				<key>MinKernel</key>
+				<string></string>
+				<key>PlistPath</key>
+				<string>Contents/Info.plist</string>
+			</dict>
+			<dict>
+				<key>Arch</key>
+				<string>Any</string>
+				<key>BundlePath</key>
+				<string>AppleALC.kext</string>
 				<key>Comment</key>
 				<string>AppleALC (audio codec ALC285 via HDA)</string>
 				<key>Enabled</key>
@@ -512,8 +532,6 @@
 				<string></string>
 				<key>MinKernel</key>
 				<string></string>
-				<key>BundlePath</key>
-				<string>AppleALC.kext</string>
 				<key>PlistPath</key>
 				<string>Contents/Info.plist</string>
 			</dict>
@@ -1363,12 +1381,8 @@
 			</dict>
 			<key>4D1FDA02-38C7-4A6A-9CC6-4BCCA8B30102</key>
 			<dict>
-				<key>revcpu</key>
-				<integer>1</integer>
-				<key>revcpuname</key>
-				<string>13th Gen Intel(R) Core(TM) i7-1360P</string>
 				<key>revpatch</key>
-				<string>sbvmm,cpuname</string>
+				<string>sbvmm</string>
 				<key>rtc-blacklist</key>
 				<data>
 				</data>
@@ -1580,9 +1594,9 @@
 				<key>Arguments</key>
 				<string></string>
 				<key>Comment</key>
-				<string>Not shipped (Apple binary). Get it from acidanthera/OcBinaryData if you need HFS+ media.</string>
+				<string>HFS+ driver (acidanthera/OcBinaryData) - gibMacOS/OC recovery + HFS+ media</string>
 				<key>Enabled</key>
-				<false/>
+				<true/>
 				<key>HideVerbose</key>
 				<false/>
 				<key>LoadEarly</key>
