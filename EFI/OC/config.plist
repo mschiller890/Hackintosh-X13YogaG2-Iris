@@ -42,7 +42,7 @@
 				<key>Comment</key>
 				<string>SSDT-PLUG-ALT.aml</string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>Path</key>
 				<string>SSDT-PLUG-ALT.aml</string>
 			</dict>
@@ -1082,14 +1082,14 @@
 		<dict>
 			<key>Cpuid1Data</key>
 			<data>
-			VQYKAAAAgAAAAAAAAAAAAA==
+			6wYIAAAAAAAAAAAAAAAAAAA=
 			</data>
 			<key>Cpuid1Mask</key>
 			<data>
-			/////wAA/wAAAAAAAAAAAA==
+			/////wAAAAAAAAAAAAAAAA==
 			</data>
 			<key>DummyPowerManagement</key>
-			<false/>
+			<true/>
 			<key>MaxKernel</key>
 			<string></string>
 			<key>MinKernel</key>
@@ -1241,7 +1241,7 @@
 			<key>IncreasePciBarSize</key>
 			<false/>
 			<key>LapicKernelPanic</key>
-			<false/>
+			<true/>
 			<key>LegacyCommpage</key>
 			<false/>
 			<key>PanicNoKextDump</key>
@@ -1309,9 +1309,9 @@
 		<key>Debug</key>
 		<dict>
 			<key>AppleDebug</key>
-			<false/>
+			<true/>
 			<key>ApplePanic</key>
-			<false/>
+			<true/>
 			<key>DisableWatchDog</key>
 			<true/>
 			<key>DisplayDelay</key>
@@ -1323,7 +1323,7 @@
 			<key>SysReport</key>
 			<false/>
 			<key>Target</key>
-			<integer>0</integer>
+			<integer>65</integer>
 		</dict>
 		<key>Entries</key>
 		<array/>
