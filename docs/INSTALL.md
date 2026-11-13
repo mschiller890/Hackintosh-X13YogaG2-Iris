@@ -19,6 +19,10 @@ The first Sequoia boot had no Wi-Fi. The Toshiba now has a Sequoia AirportItlwm 
 
 [OpenCore recovery commands](https://github.com/acidanthera/OpenCorePkg/blob/master/Utilities/macrecovery/recovery_urls.txt) · [AirportItlwm releases](https://github.com/laobamac/itlwm/releases) · [Apple bootable installer guide](https://support.apple.com/en-us/101578)
 
+## Trackpad
+
+The ELAN0674 trackpad worked in Tahoe Recovery after adding a Tiger Lake-LP PCI controller match (A0E8-A0EB) to VoodooI2C. All three config templates enable controller polling on PCI 00:15.0. Touchscreen operation remains unverified.
+
 ## Tahoe graphics bring-up
 
 The remaining steps cover the experimental Tahoe stack. The online Tahoe USB repeatedly stopped at `EXITBS:START`. On Sequoia, test [WhateverXe](https://github.com/b00t0x/WhateverXe/) separately after the OS boots. Follow its instructions for the matching graphics package and disable NootedGreen and WhateverGreen for the WhateverXe test.
