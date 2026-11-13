@@ -1,5 +1,20 @@
 # Debugging notes
 
+## Installer and input diagnostics
+
+- **Picker returns immediately.** Record the exact entry and any on-screen error. Enable OpenCore file logging with a matching DEBUG build, then collect the newest `opencore-*.txt` from the USB root.
+- **Stops at `EXITBS:START`.** Save the full log and identify the EFI and Recovery image in use. The Tahoe test reached successful kernel prelinking before this marker. Sequoia Recovery reached its menu with the Kingston EFI baseline.
+- **Wi-Fi missing in Recovery.** Check the OS version and the AirportItlwm entry’s kernel range. The bundled Tahoe driver targets Darwin 25.x. Sequoia 15.2 and later needs a Sequoia build targeting Darwin 24.2–24.99.99.
+- **Trackpad or touchscreen missing.** Check which arguments reached the kernel and which drivers loaded. The earlier debug log showed that OpenCore retained the existing `boot-args`. Preserve firmware boot entries while diagnosing the USB.
+
+  ```sh
+  sysctl -n kern.bootargs
+  kmutil showloaded | grep -Ei 'Voodoo(I2C|GPIO|Input|PS2)'
+  ioreg -p IOService -w0 | grep -Ei 'ELAN0674|WACF2208|VoodooI2C|VoodooGPIO'
+  ```
+
+## Graphics diagnostics
+
 Most bugs were found by reproducing them **outside** WindowServer with small programs in `tools/diagnostics`
 (build each with the `clang` line in its header comment).
 

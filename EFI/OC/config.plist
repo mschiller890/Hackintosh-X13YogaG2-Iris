@@ -1082,7 +1082,7 @@
 		<dict>
 			<key>Cpuid1Data</key>
 			<data>
-			6wYIAAAAAAAAAAAAAAAAAAA=
+			6wYIAAAAAAAAAAAAAAAAAA==
 			</data>
 			<key>Cpuid1Mask</key>
 			<data>
@@ -1404,7 +1404,7 @@
 				AAAAAAAAAAAAAAAAAAA=
 				</data>
 				<key>boot-args</key>
-				<string>IGLogLevel=3 -ngreentglwithgfx -allow3d -disablegfxfirmware ngreen-dmc=tgl -ngreenv189 -ngreenkeepefi -ngreenxefix -ngreenfixbootmode amfi_get_out_of_my_way=1 ngreenSched=4 ngreenV142=3 gfxrst=1</string>
+				<string>IGLogLevel=3 -ngreentglwithgfx -allow3d -disablegfxfirmware ngreen-dmc=tgl -ngreenv189 -ngreenkeepefi -ngreenxefix -ngreenfixbootmode amfi_get_out_of_my_way=1 ngreenSched=4 ngreenV142=3 gfxrst=1 -vi2c-force-polling</string>
 				<key>csr-active-config</key>
 				<data>
 				EwoAAA==

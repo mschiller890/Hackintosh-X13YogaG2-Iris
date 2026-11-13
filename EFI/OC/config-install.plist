@@ -1402,7 +1402,7 @@
 				AAAAAAAAAAAAAAAAAAA=
 				</data>
 				<key>boot-args</key>
-				<string>keepsyms=1 -v debug=0x100</string>
+				<string>keepsyms=1 -v debug=0x100 -vi2c-force-polling</string>
 				<key>csr-active-config</key>
 				<data>
 				EwoAAA==

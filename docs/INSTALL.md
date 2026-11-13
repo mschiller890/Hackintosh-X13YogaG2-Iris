@@ -1,5 +1,28 @@
 # Installation guide
 
+## Sequoia online Recovery
+
+The Toshiba reached Sequoia Recovery using the EFI backed up from the Kingston. Back up that EFI before rebuilding a USB. The repo includes a sanitized copy of the USB configuration as `EFI/OC/config-sequoia.plist`.
+
+1. Prepare a FAT32 USB with the boot-tested `EFI` folder at its root. Keep one active `EFI/OC/config.plist`. When building from the repo, copy `config-sequoia.plist` to `config.plist` on the USB and fill in your own MacBookPro16,2 SMBIOS values.
+2. From the OpenCore `macrecovery` directory, download Sequoia Recovery and wait for verification.
+
+   ```sh
+   python macrecovery.py -b Mac-7BA5B2D9E42DDD94 -m 00000000000000000 download
+   ```
+
+3. Copy the verified image and matching chunklist into `com.apple.recovery.boot` at the root of the USB.
+4. Select the USB from Lenovo F12. In OpenCore, press Space if needed and select the external DMG entry. The Toshiba can show `TAHOE (external) (DMG)` because of its volume label. Confirm that Recovery offers **Install macOS Sequoia**.
+5. Connect to the internet and select your intended macOS volume. Recovery can download a newer Sequoia point release. To target a specific build, use its full installer and run `createinstallmedia` from macOS.
+
+The first Sequoia boot had no Wi-Fi. The Toshiba now has a Sequoia AirportItlwm entry limited to Darwin 24.2–24.99.99 and a Tahoe entry limited to Darwin 25.x. The Sequoia driver still needs a Recovery retest.
+
+[OpenCore recovery commands](https://github.com/acidanthera/OpenCorePkg/blob/master/Utilities/macrecovery/recovery_urls.txt) · [AirportItlwm releases](https://github.com/laobamac/itlwm/releases) · [Apple bootable installer guide](https://support.apple.com/en-us/101578)
+
+## Tahoe graphics bring-up
+
+The remaining steps cover the experimental Tahoe stack. The online Tahoe USB repeatedly stopped at `EXITBS:START`. On Sequoia, test [WhateverXe](https://github.com/b00t0x/WhateverXe/) separately after the OS boots. Follow its instructions for the matching graphics package and disable NootedGreen and WhateverGreen for the WhateverXe test.
+
 > Target: **Lenovo ThinkPad X13 Yoga Gen 2** (i5-1135G7, Tiger Lake-LP, Iris Xe `8086:9A49`), **macOS Tahoe 26.7.1 (25G241)**.
 > This fork has not yet been tested on hardware — treat the steps as the bring-up plan and report what actually happens.
 > The short path is `zsh make-efi.sh` (EFI with your own serials) and, after installing macOS,
@@ -64,10 +87,8 @@ to register them. It goes to `/Library/Extensions` (step 5), not to the EFI.
 Put `build/NootedGreen.kext` in `EFI/OC/Kexts/` and switch back to the accelerated `config.plist` (keep the boot-args
 from the repository).
 
-**Own config.plist or reused NVRAM:** OpenCore only writes `NVRAM > Add > boot-args` if the variable is also listed
-under `NVRAM > Delete` for the same GUID (`7C436110-AB2A-4BBB-A880-FE41995C9F82`); otherwise the OpenCore log shows
-`ignored, exists` and the old boot-args stay. The repository's configs already list it. Without it the Xe boot-args
-are missing and the boot stops right after the accelerator starts (`didn't find dpmicro`, no panic).
+**Own config.plist or reused NVRAM:** Check the effective arguments with `sysctl -n kern.bootargs`. The Toshiba log showed that OpenCore kept the existing value even though it was listed
+under `NVRAM > Delete` for the same GUID. See [troubleshooting](DEBUGGING.md).
 
 ## 5. User-space side
 
@@ -150,7 +171,7 @@ This machine uses the standard HDA path, not the upstream SOF/AudShim stack. `Ap
 `EFI/OC/Kexts/` and the `HDAS → HDEF` rename is in the ACPI config.
 
 Add `alcid=NN` to the boot-args and reboot, trying these candidates in order:
-**17, 99, 11, 21, 29, 66, 14, 15** (11 is the documented X1 Carbon 6 layout; 17/99 are common ThinkPad ALC285 picks).
+**11, 21, 31, 33, 52, 61, 66, 71, 88** are listed for ALC285. Tahoe needs AppleHDA restored before testing AppleALC layouts.
 Pass criteria: speakers + headphone + internal mic. HDMI audio comes along with the GPU
 (`hda-gfx=onboard-1` is already set).
 
@@ -164,8 +185,7 @@ appears in the menu bar like on a Mac (HeliPort is not needed; remove its login 
 - After the switch macOS may keep an old "Ethernet" service for en0: System Settings › Network › remove it, then "+" →
   Wi-Fi. en0 should be the Wi-Fi port (iMessage/FaceTime expect a built-in en0).
 - Optional: boot-arg `itlwm_he=1` turns on Wi-Fi 6 (HE) rates.
-- Fallback: `config-install.plist` still uses itlwm (connect with HeliPort). Switch back the same way if a macOS update
-  breaks AirportItlwm.
+- On an installed system, itlwm with HeliPort is an optional fallback. Enable only one Wi-Fi driver per OS.
 - Not available with this driver: AirDrop/AWDL, WPA3-only networks.
 
 ## Hardware video decode (optional)
